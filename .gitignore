@@ -1,0 +1,5 @@
+SECRETS.py
+.idea
+__pycache__
+ytdl
+*.exe
