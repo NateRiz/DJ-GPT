@@ -23,7 +23,8 @@ async def on_ready():
 
 
 @client.command()
-async def play(ctx, song_prompt=None):
+async def play(ctx, *args):
+    song_prompt = " ".join(args) if args else None
     if ctx.voice_client is None:
         if not song_prompt:
             await ctx.send(F"Nothing to play.")
@@ -38,8 +39,7 @@ async def play(ctx, song_prompt=None):
             music_player.toggle_pause(ctx.voice_client)
             return
 
-    async with ctx.typing():
-        await music_player.play_or_queue_song(ctx.voice_client, song_prompt, ctx.channel.id)
+    music_player.queue_song(song_prompt, ctx.channel.id)
 
 
 @client.command()
@@ -75,6 +75,22 @@ async def stop(ctx):
     else:
         await ctx.send("The bot is not playing anything at the moment.")
     await voice_client.disconnect()
+
+@client.command()
+async def forceskip(ctx):
+    await skip(ctx)
+
+@client.command()
+async def skip(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client is None:
+        await ctx.send("Not connected to any voice channel")
+        return
+
+    if voice_client.is_playing():
+        music_player.skip(voice_client)
+    else:
+        await ctx.send("The bot is not playing anything at the moment.")
 
 
 @client.command()

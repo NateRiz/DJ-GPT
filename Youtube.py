@@ -49,7 +49,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             filename = data["title"]
         else:
             filename = ytdl.prepare_filename(data)
-        song = Song(data["webpage_url"], data["title"], data["uploader"], data["duration"], -1)
+        song = Song(data["webpage_url"], data["title"], data["uploader"], data["duration"], data["thumbnail"], -1)
         return song, filename
 
     @classmethod

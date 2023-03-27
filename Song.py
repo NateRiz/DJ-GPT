@@ -7,4 +7,5 @@ class Song:
     name: str
     uploader: str
     duration: int
+    thumbnail: str
     channel_id: int
