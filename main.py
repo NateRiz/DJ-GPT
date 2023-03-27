@@ -109,7 +109,5 @@ if __name__ == '__main__':
 
 # todo
 # voice to text
-# check if arg is youtube link or search prompts
-# queue skip
-# Queue promote to first
+# Queue promote to first or delete
 # playlist
