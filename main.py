@@ -1,5 +1,4 @@
-import threading
-import time
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -12,10 +11,21 @@ client = commands.Bot(command_prefix='-', intents=intents)
 music_player = MusicPlayer(client)
 
 
+@client.event
+async def on_message(message):
+    command = message.content.split()
+    if not message.content.startswith("-"):
+        return
+    message.content = command[0].lower() + " " + " ".join(command[1:])
+    await client.process_commands(message)
+
+
 @client.after_invoke
 async def delete_command_message(ctx):
     # Delete the user's command message
+    await asyncio.sleep(60)
     await ctx.message.delete()
+
 
 @client.event
 async def on_ready():
@@ -76,9 +86,11 @@ async def stop(ctx):
         await ctx.send("The bot is not playing anything at the moment.")
     await voice_client.disconnect()
 
+
 @client.command()
 async def forceskip(ctx):
     await skip(ctx)
+
 
 @client.command()
 async def skip(ctx):
