@@ -1,7 +1,6 @@
 import discord
 
 from Song import Song
-from SongQueue import SongQueue
 
 
 class NotificationService:
@@ -9,7 +8,7 @@ class NotificationService:
     last_queue_message = None
 
     @staticmethod
-    async def notify_new_song(channel: discord.TextChannel, song: Song, song_queue: SongQueue) -> discord.Message:
+    async def notify_new_song(channel: discord.TextChannel, song: Song, song_queue) -> discord.Message:
         """
         Notify the channel of the newly added song and current song queue
         :param channel: The channel to send the notification to
@@ -36,9 +35,9 @@ class NotificationService:
         return await channel.send(embed=embed)
 
     @staticmethod
-    async def notify_queued_song(channel: discord.TextChannel, song: Song, song_queue: SongQueue) -> discord.Message:
+    async def notify_queued_song(channel: discord.TextChannel, song: Song, song_queue) -> discord.Message:
         """
-        Notify the channel of the newly queued song and current song queue
+        Notify the channel of the newly queued song and delete the last queue message
         :param channel: The channel to send the notification to
         :param song: The newly queued song
         :param song_queue: The current song queue

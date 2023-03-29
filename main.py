@@ -8,17 +8,16 @@ from discord.ext.commands import Context
 from MusicPlayer import MusicPlayer
 from SECRETS import TOKEN
 
-intents = discord.Intents().all()
 command_prefix = "-"
-client = commands.Bot(command_prefix=command_prefix, intents=intents)
+client = commands.Bot(command_prefix=command_prefix, intents=discord.Intents().all())
 music_player = MusicPlayer(client)
 
 
 @client.event
 async def on_message(message: Message) -> None:
     """
-    An event that is triggered when a message is received in the server.
-    :param message: The message object that was received.
+    An event that is triggered when a message is received in the server
+    :param message: The message object that was received
     :return: None
     """
     if message.author == client.user:
@@ -32,8 +31,8 @@ async def on_message(message: Message) -> None:
 async def delete_command_message(ctx: Context) -> None:
     """
     An event that is triggered after a command is invoked. This function waits for 60 seconds,
-    then deletes the message that triggered the command.
-    :param ctx: The context object for the command.
+    then deletes the message that triggered the command
+    :param ctx: The context object for the command
     :return: None
     """
     await asyncio.sleep(60)
@@ -43,16 +42,17 @@ async def delete_command_message(ctx: Context) -> None:
 @client.event
 async def on_ready() -> None:
     """
-    An event that is triggered when the client has successfully connected to Discord.
+    An event that is triggered when the client has successfully connected to Discord
     :return: None
     """
     print("successful login as {0.user}".format(client))
 
+@client.command()
 async def play(ctx: Context, *args: str) -> None:
     """
-    A command that plays music in a voice channel.
-    :param ctx: The context object for the command.
-    :param args: The arguments passed to the command.
+    A command that plays music in a voice channel
+    :param ctx: The context object for the command
+    :param args: The arguments passed to the command
     :return: None
     """
     song_prompt = " ".join(args) if args else None
@@ -70,15 +70,15 @@ async def play(ctx: Context, *args: str) -> None:
             music_player.toggle_pause(ctx.voice_client)
             return
 
-    music_player.queue_song(song_prompt, ctx.channel.id)
+    await music_player.queue_song(song_prompt, ctx.channel.id)
 
 
 @client.command()
 async def connect(ctx: Context) -> bool:
     """
-    A command that connects the bot to a voice channel.
-    :param ctx: The context object for the command.
-    :return: A boolean indicating if the bot successfully connected to the voice channel.
+    A command that connects the bot to a voice channel
+    :param ctx: The context object for the command
+    :return: A boolean indicating if the bot successfully connected to the voice channel
     """
     if ctx.voice_client is not None:
         return False
@@ -95,8 +95,8 @@ async def connect(ctx: Context) -> bool:
 @client.command()
 async def pause(ctx: Context) -> None:
     """
-    A command that pauses the currently playing song.
-    :param ctx: The context object for the command.
+    A command that pauses the currently playing song
+    :param ctx: The context object for the command
     :return: None
     """
     voice_client = ctx.message.guild.voice_client
@@ -110,8 +110,8 @@ async def pause(ctx: Context) -> None:
 @client.command()
 async def stop(ctx: Context) -> None:
     """
-    A command that stops the currently playing song and disconnects from the voice channel.
-    :param ctx: The context object for the command.
+    A command that stops the currently playing song and disconnects from the voice channel
+    :param ctx: The context object for the command
     :return: None
     """
     voice_client = ctx.message.guild.voice_client
@@ -129,8 +129,8 @@ async def stop(ctx: Context) -> None:
 @client.command(aliases=["forceskip"])
 async def skip(ctx: Context) -> None:
     """
-    A command that skips the currently playing song.
-    :param ctx: The context object for the command.
+    A command that skips the currently playing song
+    :param ctx: The context object for the command
     :return: None
     """
     voice_client = ctx.message.guild.voice_client
@@ -147,8 +147,8 @@ async def skip(ctx: Context) -> None:
 @client.command(aliases=["dc"])
 async def disconnect(ctx: Context) -> None:
     """
-    A command that disconnects the bot from the voice channel.
-    :param ctx: The context object for the command.
+    A command that disconnects the bot from the voice channel
+    :param ctx: The context object for the command
     :return: None
     """
     voice_client = ctx.voice_client
@@ -167,3 +167,4 @@ if __name__ == '__main__':
 # voice to text
 # Queue promote to first or delete
 # playlist
+# download future songs so they play faster. Have a cleanup task that deletes old songs

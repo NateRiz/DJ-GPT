@@ -34,12 +34,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.url = ""
 
     @classmethod
-    async def from_url(cls, url):
+    async def from_url(cls, url) -> tuple[Song, str]:
         return await YTDLSource._retrieve(url)
 
 
     @classmethod
-    async def _retrieve(cls, url, *, loop=None, stream=False):
+    async def _retrieve(cls, url, *, loop=None, stream=False) -> tuple[Song, str]:
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
         if 'entries' in data:
@@ -53,5 +53,5 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return song, filename
 
     @classmethod
-    async def get_metadata(cls, url):
-        return await YTDLSource._retrieve(url, stream=True)
+    async def get_metadata(cls, url) -> Song:
+        return (await YTDLSource._retrieve(url, stream=True))[0]

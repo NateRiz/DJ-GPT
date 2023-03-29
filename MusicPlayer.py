@@ -38,8 +38,8 @@ class MusicPlayer:
             voice_client.resume()
             self.is_paused = False
 
-    def queue_song(self, song_prompt, channel_id):
-        self.song_queue.add_song(song_prompt, channel_id)
+    async def queue_song(self, song_prompt, channel_id):
+        await self.song_queue.add_song(song_prompt, channel_id)
         threading.Thread(target=self.wait_for_audio_finish).start()
 
     def wait_for_audio_finish(self):
