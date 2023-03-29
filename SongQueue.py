@@ -54,6 +54,7 @@ class SongQueue:
     def clear(self) -> None:
         """ Clear the song queue. """
         self.song_queue.clear()
+        [task.cancel() for task, _ in self.get_metadata_task_queue]
 
     def length(self) -> int:
         """
@@ -90,6 +91,7 @@ class SongQueue:
             channel_id (int): Discord channel ID.
         """
         async with asyncio.TaskGroup() as tg:
+            print(f"Getting metadata for {song_name}")
             task = tg.create_task(YTDLSource.get_metadata(song_name))
             self.get_metadata_task_queue.append((task, channel_id))
 
@@ -100,4 +102,5 @@ class SongQueue:
                 finished_task, channel_id, = self.get_metadata_task_queue.pop(0)
                 song_metadata: Song = finished_task.result()
                 song_metadata.channel_id = channel_id
+                print(f"Queueing song {song_metadata}")
                 self.song_queue.append(song_metadata)

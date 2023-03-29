@@ -27,6 +27,18 @@ async def on_message(message: Message) -> None:
         await client.process_commands(message)
 
 
+@client.event
+async def on_voice_state_update(member, _before, after):
+    """
+    Used when bot disconnects from the channel to clear the music player
+    :param member: member
+    :param _before: Channel before
+    :param after: Channel after
+    """
+    if after.channel is None and member == client.user:
+        music_player.stop()
+
+
 @client.after_invoke
 async def delete_command_message(ctx: Context) -> None:
     """
@@ -46,6 +58,7 @@ async def on_ready() -> None:
     :return: None
     """
     print("successful login as {0.user}".format(client))
+
 
 @client.command()
 async def play(ctx: Context, *args: str) -> None:
@@ -107,25 +120,6 @@ async def pause(ctx: Context) -> None:
     music_player.toggle_pause(voice_client)
 
 
-@client.command()
-async def stop(ctx: Context) -> None:
-    """
-    A command that stops the currently playing song and disconnects from the voice channel
-    :param ctx: The context object for the command
-    :return: None
-    """
-    voice_client = ctx.message.guild.voice_client
-    if voice_client is None:
-        await ctx.send("Not connected to any voice channel")
-        return
-
-    if voice_client.is_playing():
-        music_player.stop(voice_client)
-    else:
-        await ctx.send("The bot is not playing anything at the moment.")
-    await voice_client.disconnect()
-
-
 @client.command(aliases=["forceskip"])
 async def skip(ctx: Context) -> None:
     """
@@ -138,13 +132,13 @@ async def skip(ctx: Context) -> None:
         await ctx.send("Not connected to any voice channel")
         return
 
-    if voice_client.is_playing():
+    if voice_client.is_playing() or music_player.is_paused:
         music_player.skip(voice_client)
     else:
         await ctx.send("The bot is not playing anything at the moment.")
 
 
-@client.command(aliases=["dc"])
+@client.command(aliases=["dc", "stop"])
 async def disconnect(ctx: Context) -> None:
     """
     A command that disconnects the bot from the voice channel
@@ -168,3 +162,5 @@ if __name__ == '__main__':
 # Queue promote to first or delete
 # playlist
 # download future songs so they play faster. Have a cleanup task that deletes old songs
+# loading bar for download song
+# Disconnecting the bot in right click menu breaks it (for a little while?)
