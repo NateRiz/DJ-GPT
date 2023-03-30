@@ -31,8 +31,9 @@ class MusicPlayer:
         """Stops playing the current song and clears the queue"""
         self.song_queue.clear()
         self.is_paused = False
-        self.wait_for_audio_task.cancel()
-        self.wait_for_audio_task = None
+        if self.wait_for_audio_task:
+            self.wait_for_audio_task.cancel()
+            self.wait_for_audio_task = None
         if self.client.voice_clients:
             assert len(self.client.voice_clients) == 1
             self.client.voice_clients[0].stop()

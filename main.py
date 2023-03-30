@@ -1,4 +1,5 @@
 import asyncio
+from builtins import ExceptionGroup
 
 import discord
 from discord import Message
@@ -83,7 +84,16 @@ async def play(ctx: Context, *args: str) -> None:
             music_player.toggle_pause(ctx.voice_client)
             return
 
-    await music_player.queue_song(song_prompt, ctx.channel.id)
+    try:
+        await ctx.message.add_reaction('🕘')
+        await music_player.queue_song(song_prompt, ctx.channel.id)
+        await ctx.message.clear_reactions()
+        await ctx.message.add_reaction('✅')
+    except Exception as e:
+        await ctx.message.clear_reactions()
+        await ctx.message.add_reaction('❌')
+        await ctx.send(str(e))
+
 
 
 @client.command()

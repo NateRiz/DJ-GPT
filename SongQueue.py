@@ -90,15 +90,19 @@ class SongQueue:
             song_name (str): The name of the song or YouTube URL.
             channel_id (int): Discord channel ID.
         """
-        async with asyncio.TaskGroup() as tg:
-            print(f"Getting metadata for {song_name}")
-            task = tg.create_task(YTDLSource.get_metadata(song_name))
-            self.get_metadata_task_queue.append((task, channel_id))
+        print(f"Getting metadata for {song_name}")
+        task = asyncio.create_task(YTDLSource.get_metadata(song_name))
+        self.get_metadata_task_queue.append((task, channel_id))
 
         # Tasks must remain in order. Only add first done tasks.
         # Lock so that multiple async tasks aren't fight over the queue.
         async with self.metadata_task_queue_lock:
-            while self.get_metadata_task_queue and self.get_metadata_task_queue[0][0].done():
+            while self.get_metadata_task_queue:
+                try:
+                    await self.get_metadata_task_queue[0][0]
+                except Exception:
+                    self.get_metadata_task_queue.pop(0)
+                    raise
                 finished_task, channel_id, = self.get_metadata_task_queue.pop(0)
                 song_metadata: Song = finished_task.result()
                 song_metadata.channel_id = channel_id
