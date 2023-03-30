@@ -1,5 +1,4 @@
 import asyncio
-
 import discord
 
 from NotificationService import NotificationService
@@ -24,11 +23,12 @@ class MusicPlayer:
         if self.wait_for_audio_task is None:
             print("Creating new audio wait task")
             self.wait_for_audio_task = self.client.loop.create_task(self._wait_for_audio_finish())
+        else:
+            requestor_channel = self.client.get_channel(channel_id)
+            await self.song_queue.send_notification(requestor_channel)
 
     def stop(self) -> None:
-        """
-        Stops playing the current song and clears the queue
-        """
+        """Stops playing the current song and clears the queue"""
         self.song_queue.clear()
         self.is_paused = False
         self.wait_for_audio_task.cancel()
@@ -84,4 +84,4 @@ class MusicPlayer:
         """
         song, filename = await YTDLSource.from_url(song_prompt)
         voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
-        await NotificationService.notify_new_song(self.client.get_channel(channel_id), song, self.song_queue)
+        await NotificationService.notify_new_song(self.client.get_channel(channel_id), song)

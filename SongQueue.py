@@ -1,13 +1,15 @@
 import asyncio
 from asyncio import Task
 
+import discord
+
 from NotificationService import NotificationService
 from Song import Song
 from Youtube import YTDLSource
 
 
 class SongQueue:
-    def __init__(self, client):
+    def __init__(self, client: discord.Client):
         self.client = client
         # Lock to ensure multiple tasks dont simultaneously pop from the metadata queue
         self.metadata_task_queue_lock = asyncio.Lock()
@@ -74,14 +76,12 @@ class SongQueue:
         """
         return self.song_queue[index]
 
-    async def send_notification(self, song: Song) -> None:
+    async def send_notification(self, channel) -> None:
         """
-        Send a notification to the requestor's channel that a song has been queued.
-        Args:
-            song (Song): The Song object that was queued.
+        Send a queue notification to the channel
+        :param channel: Channel
         """
-        requestor_channel = self.client.get_channel(song.channel_id)
-        await NotificationService.notify_queued_song(requestor_channel, song, self)
+        await NotificationService.notify_queued_song(channel, self.song_queue)
 
     async def _get_metadata(self, song_name: str, channel_id: int) -> None:
         """
