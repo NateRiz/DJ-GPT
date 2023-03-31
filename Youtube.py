@@ -1,7 +1,7 @@
 import asyncio
 import yt_dlp
 import discord
-
+from random import randint
 from Song import Song
 
 ytdl_format_options = {
@@ -17,7 +17,7 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
@@ -25,6 +25,7 @@ ffmpeg_options = {
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
+
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=1.0):
@@ -37,11 +38,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url) -> tuple[Song, str]:
         return await YTDLSource._retrieve(url)
 
-
     @classmethod
     async def _retrieve(cls, url, *, loop=None, stream=False) -> tuple[Song, str]:
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        data = await execute_with_retries(loop, url, stream)
         if 'entries' in data:
             # take first item from a playlist
             data = data['entries'][0]
@@ -54,4 +54,21 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def get_metadata(cls, url) -> Song:
-        return (await YTDLSource._retrieve(url, stream=True))[0]
+        try:
+            task = await YTDLSource._retrieve(url, stream=True)
+            return task[0]
+        except Exception as e:
+            print(e)
+
+
+async def execute_with_retries(loop, url, stream):
+    data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+    if data:
+        return data
+
+    retry_count = 3
+    for _ in range(retry_count):
+        await asyncio.sleep(randint(1, 5))  # Randomized to keep tasks on different seconds
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        if data:
+            return data
