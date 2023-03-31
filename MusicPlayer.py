@@ -73,6 +73,8 @@ class MusicPlayer:
                 await self._play(voice_client, song.url, song.channel_id)
 
             await asyncio.sleep(1)
+
+        print("Audio is done, disconnecting")
         await voice_client.disconnect()
         self.wait_for_audio_task = None
 
@@ -83,6 +85,6 @@ class MusicPlayer:
         :param song_prompt: The URL of the song to play
         :param channel_id: The ID of the channel where the song was requested
         """
-        song, filename = await YTDLSource.from_url(song_prompt)
+        song, filename = await YTDLSource().from_url(song_prompt)
         voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
         await NotificationService.notify_new_song(self.client.get_channel(channel_id), song)

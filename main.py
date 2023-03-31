@@ -174,3 +174,6 @@ if __name__ == '__main__':
 # download future songs so they play faster. Have a cleanup task that deletes old songs
 # loading bar for download song
 # Disconnecting the bot in right click menu breaks it (for a little while?)
+# button to requeue past songs.
+# Spamming yt link gave 404
+#true play pause buttons
