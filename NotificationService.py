@@ -28,6 +28,7 @@ class NotificationService:
         embed.set_author(name=song.uploader)
         embed.set_thumbnail(url=song.thumbnail)
         await channel.send(embed=embed)
+        NotificationService.last_queue_message = await channel.send(view=MediaPlayback())
 
     @staticmethod
     async def notify_queued_song(channel: discord.TextChannel, song_queue: list[Song]) -> None:
@@ -59,6 +60,7 @@ class NotificationService:
             embed.set_author(name="Queue")
             embed.set_thumbnail(url=song.thumbnail)
             NotificationService.last_queue_message = await channel.send(embed=embed, view=MediaPlayback())
+
 
 def format_duration(seconds: int) -> str:
     """

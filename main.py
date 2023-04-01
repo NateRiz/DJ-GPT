@@ -19,12 +19,19 @@ async def on_message(message: Message) -> None:
     """
     An event that is triggered when a message is received in the server
     :param message: The message object that was received
-    :return: None
     """
+    # Ignore the bot
     if message.author == client.user:
         return
 
     if message.content.startswith(command_prefix):
+        words = message.content.split()
+        # Lowercase the first command
+        words[0] = words[0].lower()
+        # Join the words back into a string
+        lowercase_message = " ".join(words)
+        message.content = lowercase_message
+
         await client.process_commands(message)
 
 
@@ -181,5 +188,4 @@ if __name__ == '__main__':
 # loading bar for download song
 # Disconnecting the bot in right click menu breaks it (for a little while?)
 # button to requeue past songs.
-# true play pause buttons
 # caps commands
