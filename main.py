@@ -95,7 +95,6 @@ async def play(ctx: Context, *args: str) -> None:
         await ctx.send(str(e))
 
 
-
 @client.command()
 async def connect(ctx: Context) -> bool:
     """
@@ -147,6 +146,13 @@ async def skip(ctx: Context) -> None:
     else:
         await ctx.send("The bot is not playing anything at the moment.")
 
+@client.command(aliases=["back"])
+async def rewind(ctx: Context) -> None:
+    voice_client = ctx.voice_client
+    if voice_client is None:
+        await ctx.send("Not connected to any voice channel")
+        return
+    music_player.rewind(voice_client)
 
 @client.command(aliases=["dc", "stop"])
 async def disconnect(ctx: Context) -> None:
@@ -175,5 +181,5 @@ if __name__ == '__main__':
 # loading bar for download song
 # Disconnecting the bot in right click menu breaks it (for a little while?)
 # button to requeue past songs.
-# Spamming yt link gave 404
-#true play pause buttons
+# true play pause buttons
+# caps commands

@@ -12,6 +12,7 @@ class MusicPlayer:
         self.song_queue = SongQueue(client)
         self.wait_for_audio_task = None
         self.is_paused = False
+        self.currently_playing_filename = ""
 
     async def queue_song(self, song_prompt: str, channel_id: int) -> None:
         """
@@ -85,6 +86,10 @@ class MusicPlayer:
         :param song_prompt: The URL of the song to play
         :param channel_id: The ID of the channel where the song was requested
         """
-        song, filename = await YTDLSource.from_url(song_prompt)
-        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
+        song, self.currently_playing_filename = await YTDLSource.from_url(song_prompt)
+        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
         await NotificationService.notify_new_song(self.client.get_channel(channel_id), song)
+
+    def rewind(self, voice_client: discord.VoiceClient):
+        voice_client.stop()
+        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
