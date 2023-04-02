@@ -1,4 +1,5 @@
 import asyncio
+import re
 from builtins import ExceptionGroup
 
 import discord
@@ -103,6 +104,35 @@ async def play(ctx: Context, *args: str) -> None:
 
 
 @client.command()
+async def playlist(ctx: Context, *args: str) -> None:
+    """
+    A command that plays a playlist in a voice channel
+    :param ctx: The context object for the command
+    :param args: The arguments passed to the command
+    :return: None
+    """
+    if ctx.voice_client is None:
+        is_connected = await connect(ctx)
+        if not is_connected:
+            return
+
+    playlist_url = "".join(args)
+    if not is_playlist_url(playlist_url):
+        await ctx.send(F"Not a valid youtube playlist url: {playlist_url}")
+        return
+
+    try:
+        await ctx.message.add_reaction('🕘')
+        await music_player.queue_playlist(playlist_url, ctx.channel.id)
+        await ctx.message.clear_reactions()
+        await ctx.message.add_reaction('✅')
+    except Exception as e:
+        await ctx.message.clear_reactions()
+        await ctx.message.add_reaction('❌')
+        await ctx.send(str(e))
+
+
+@client.command()
 async def connect(ctx: Context) -> bool:
     """
     A command that connects the bot to a voice channel
@@ -175,6 +205,10 @@ async def disconnect(ctx: Context) -> None:
     else:
         await voice_client.disconnect()
 
+def is_playlist_url(url):
+    playlist_regex = r".*youtube\.com\/watch\?v=.*&list=.*"
+    return re.match(playlist_regex, url) is not None
+
 
 if __name__ == '__main__':
     # getting the secret token
@@ -188,4 +222,3 @@ if __name__ == '__main__':
 # loading bar for download song
 # Disconnecting the bot in right click menu breaks it (for a little while?)
 # button to requeue past songs.
-# caps commands

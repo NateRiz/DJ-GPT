@@ -9,7 +9,9 @@ from Song import Song
 class NotificationService:
     """Messages the channel for song and queue changes"""
     last_queue_message = None
-    send_message_lock = asyncio.Lock()
+    last_queue_message_lock = asyncio.Lock()
+    last_media_playback_message = None
+    last_media_playback_message_lock = asyncio.Lock()
 
     @staticmethod
     async def notify_new_song(channel: discord.TextChannel, song: Song) -> discord.Message:
@@ -28,7 +30,7 @@ class NotificationService:
         embed.set_author(name=song.uploader)
         embed.set_thumbnail(url=song.thumbnail)
         await channel.send(embed=embed)
-        NotificationService.last_queue_message = await channel.send(view=MediaPlayback())
+        await NotificationService.create_media_playback(channel)
 
     @staticmethod
     async def notify_queued_song(channel: discord.TextChannel, song_queue: list[Song]) -> None:
@@ -37,16 +39,20 @@ class NotificationService:
         :param channel: The channel to send the notification to
         :param song_queue: The current song queue
         """
-        async with NotificationService.send_message_lock:
+        async with NotificationService.last_queue_message_lock:
             if NotificationService.last_queue_message is not None:
                 await NotificationService.last_queue_message.delete()
 
             description = []
             max_fields = 8
             num_fields = min(max_fields, len(song_queue))
+            max_name_length = 37
             for i in range(num_fields):
+                abbreviated_name = song_queue[i].name
+                if len(abbreviated_name) > max_name_length:
+                    abbreviated_name = abbreviated_name[:max_name_length]+"-"
                 description.append(
-                    f"{i + 1}. {song_queue[i].name} [{format_duration(song_queue[i].duration)}]")
+                    f"{i + 1}. {abbreviated_name} [{format_duration(song_queue[i].duration)}]")
             if len(song_queue) > max_fields:
                 description.append(f"+ {len(song_queue) - max_fields} more...")
 
@@ -59,7 +65,15 @@ class NotificationService:
             )
             embed.set_author(name="Queue")
             embed.set_thumbnail(url=song.thumbnail)
-            NotificationService.last_queue_message = await channel.send(embed=embed, view=MediaPlayback())
+            NotificationService.last_queue_message = await channel.send(embed=embed)
+            await NotificationService.create_media_playback(channel)
+
+    @staticmethod
+    async def create_media_playback(channel):
+        async with NotificationService.last_media_playback_message_lock:
+            if NotificationService.last_media_playback_message:
+                await NotificationService.last_media_playback_message.delete()
+            NotificationService.last_media_playback_message = await channel.send(view=MediaPlayback())
 
 
 def format_duration(seconds: int) -> str:

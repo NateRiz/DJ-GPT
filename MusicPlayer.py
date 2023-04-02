@@ -1,4 +1,6 @@
 import asyncio
+import re
+
 import discord
 
 from NotificationService import NotificationService
@@ -20,13 +22,10 @@ class MusicPlayer:
         :param song_prompt: The name of the song to add
         :param channel_id: The ID of the channel where the song was requested
         """
-        await self.song_queue.add_song(song_prompt, channel_id)
-        if self.wait_for_audio_task is None:
-            print("Creating new audio wait task")
-            self.wait_for_audio_task = self.client.loop.create_task(self._wait_for_audio_finish())
-        else:
-            requestor_channel = self.client.get_channel(channel_id)
-            await self.song_queue.send_notification(requestor_channel)
+        await self._queue(song_prompt, channel_id, False)
+
+    async def queue_playlist(self, song_prompt: str, channel_id: int) -> None:
+        await self._queue(song_prompt, channel_id, True)
 
     def stop(self) -> None:
         """Stops playing the current song and clears the queue"""
@@ -59,6 +58,10 @@ class MusicPlayer:
             voice_client.resume()
             self.is_paused = False
 
+    def rewind(self, voice_client: discord.VoiceClient):
+        voice_client.stop()
+        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
+
     async def _wait_for_audio_finish(self) -> None:
         """
         A coroutine that waits for the current song to finish playing before playing the next song
@@ -86,10 +89,18 @@ class MusicPlayer:
         :param song_prompt: The URL of the song to play
         :param channel_id: The ID of the channel where the song was requested
         """
-        song, self.currently_playing_filename = await YTDLSource.from_url(song_prompt)
+        songs, self.currently_playing_filename = await YTDLSource.from_url(song_prompt)
         voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
-        await NotificationService.notify_new_song(self.client.get_channel(channel_id), song)
+        await NotificationService.notify_new_song(self.client.get_channel(channel_id), songs[0])
 
-    def rewind(self, voice_client: discord.VoiceClient):
-        voice_client.stop()
-        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
+    async def _queue(self, song_prompt: str, channel_id: int, is_playlist: bool) -> None:
+        await self.song_queue.add_song(song_prompt, channel_id, is_playlist)
+
+        requestor_channel = self.client.get_channel(channel_id)
+        if self.wait_for_audio_task is None:
+            print("Creating new audio wait task")
+            if is_playlist and self.song_queue.length() > 1:
+                await self.song_queue.send_notification(requestor_channel)
+            self.wait_for_audio_task = self.client.loop.create_task(self._wait_for_audio_finish())
+        else:
+            await self.song_queue.send_notification(requestor_channel)
