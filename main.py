@@ -48,6 +48,24 @@ async def on_voice_state_update(member, _before, after):
         music_player.stop()
 
 
+@client.event
+async def on_reaction_add(reaction, user):
+    if user == client.user:
+        return
+
+    if reaction.emoji != '🎵':
+        return
+
+    message = reaction.message.content.split()
+    max_url_length = 164
+    url = message[-2][:max_url_length]
+    if not is_playlist_url(url):
+        return
+
+    ctx = await client.get_context(reaction.message.reference.resolved)
+    await playlist(ctx, url)
+    await reaction.message.delete()
+
 @client.after_invoke
 async def delete_command_message(ctx: Context) -> None:
     """
@@ -102,6 +120,11 @@ async def play(ctx: Context, *args: str) -> None:
         await ctx.message.add_reaction('❌')
         await ctx.send(str(e))
 
+    if is_playlist_url(song_prompt):
+        response = await ctx.message.reply(
+            F"This url looks like a playlist. To queue up all songs in a playlist use the `-playlist` command or click the reaction below:\n\n` -playlist {song_prompt} `")
+        await response.add_reaction('🎵')
+
 
 @client.command()
 async def playlist(ctx: Context, *args: str) -> None:
@@ -147,7 +170,7 @@ async def connect(ctx: Context) -> bool:
         await voice_state.channel.connect()
         return True
     else:
-        await ctx.send("Not connected to any voice channel")
+        await ctx.send("No voice state in context")
         return False
 
 
@@ -183,6 +206,7 @@ async def skip(ctx: Context) -> None:
     else:
         await ctx.send("The bot is not playing anything at the moment.")
 
+
 @client.command(aliases=["back"])
 async def rewind(ctx: Context) -> None:
     voice_client = ctx.voice_client
@@ -190,6 +214,7 @@ async def rewind(ctx: Context) -> None:
         await ctx.send("Not connected to any voice channel")
         return
     music_player.rewind(voice_client)
+
 
 @client.command(aliases=["dc", "stop"])
 async def disconnect(ctx: Context) -> None:
@@ -204,6 +229,7 @@ async def disconnect(ctx: Context) -> None:
         return
     else:
         await voice_client.disconnect()
+
 
 def is_playlist_url(url):
     playlist_regex = r".*youtube\.com\/watch\?v=.*&list=.*"
