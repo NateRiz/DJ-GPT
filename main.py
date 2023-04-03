@@ -7,6 +7,7 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from Cleaner import Cleaner
 from MusicPlayer import MusicPlayer
 from SECRETS import TOKEN
 
@@ -46,6 +47,7 @@ async def on_voice_state_update(member, _before, after):
     """
     if after.channel is None and member == client.user:
         music_player.stop()
+        Cleaner.empty_songs()
 
 
 @client.event
@@ -243,7 +245,6 @@ if __name__ == '__main__':
 # todo
 # voice to text
 # Queue promote to first or delete
-# playlist
 # download future songs so they play faster. Have a cleanup task that deletes old songs
 # loading bar for download song
 # Disconnecting the bot in right click menu breaks it (for a little while?)
