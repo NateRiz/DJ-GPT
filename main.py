@@ -1,6 +1,5 @@
 import asyncio
 import re
-from builtins import ExceptionGroup
 
 import discord
 from discord import Message
@@ -68,6 +67,7 @@ async def on_reaction_add(reaction, user):
     await playlist(ctx, url)
     await reaction.message.delete()
 
+
 @client.after_invoke
 async def delete_command_message(ctx: Context) -> None:
     """
@@ -126,6 +126,13 @@ async def play(ctx: Context, *args: str) -> None:
         response = await ctx.message.reply(
             F"This url looks like a playlist. To queue up all songs in a playlist use the `-playlist` command or click the reaction below:\n\n` -playlist {song_prompt} `")
         await response.add_reaction('🎵')
+
+
+@client.command(aliases=["auto"])
+async def autoplay(ctx: Context) -> None:
+    music_player.autoplay()
+    state = "enabled" if music_player.is_autoplay else "disabled"
+    await ctx.send(f"Autoplay is {state}.")
 
 
 @client.command()

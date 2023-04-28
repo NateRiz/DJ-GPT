@@ -24,7 +24,16 @@ class YTDLSource(discord.PCMVolumeTransformer):
         'nooverwrites': False,
         'default_search': 'auto',
         'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
-
+    })
+    autoplay_ytdl = yt_dlp.YoutubeDL({
+        'format': 'bestaudio/best',
+        'outtmpl': 'ytdl/audio.%(ext)s',  # You can change the PATH as you want
+        'nocontinue': True,
+        'nooverwrites': False,
+        'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
+        'playlistrandom': True,
+        "ignoreerrors": True,
+        "max_downloads":1
     })
 
     def __init__(self, source, *, data, volume=1.0):
@@ -35,12 +44,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def from_url(cls, url) -> tuple[list[Song], str]:
-        return await YTDLSource._retrieve(url, False)
+        return await YTDLSource._retrieve(url, YTDLSource.song_ytdl)
 
     @classmethod
-    async def _retrieve(cls, url, is_playlist, *, loop=None, stream=False) -> tuple[list[Song], str]:
+    async def _retrieve(cls, url, ytdl, *, loop=None, stream=False) -> tuple[list[Song], str]:
         loop = loop or asyncio.get_event_loop()
-        ytdl = YTDLSource.playlist_ytdl if is_playlist else YTDLSource.song_ytdl
         data = await execute_with_retries(loop, url, stream, ytdl)
         filename = YTDLSource.song_ytdl.prepare_filename(data)
 
@@ -58,14 +66,25 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def get_metadata(cls, url, is_playlist) -> list[Song]:
         try:
-            task = await YTDLSource._retrieve(url, is_playlist, stream=True)
+            ytdl = YTDLSource.playlist_ytdl if is_playlist else YTDLSource.song_ytdl
+            task = await YTDLSource._retrieve(url, ytdl, stream=True)
             return task[0]
+        except Exception as e:
+            print(e)
+
+    @classmethod
+    async def get_autoplay(cls, query: str) -> tuple[list[Song], str]:
+        try:
+            return await YTDLSource._retrieve(f"ytsearchall:'{query}' playlist", YTDLSource.autoplay_ytdl)
         except Exception as e:
             print(e)
 
 
 async def execute_with_retries(loop, url, stream, ytdl):
-    data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+    try:
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+    except Exception as e:
+        print(e)
     if data:
         return data
 
