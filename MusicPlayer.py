@@ -136,6 +136,6 @@ class MusicPlayer:
     def _get_ffmpeg_path():
         if os.path.isfile("ffmpeg.exe"):
             return "ffmpeg.exe"
-        if os.path.isfile("/usr/bin/ffmpeg")
+        if os.path.isfile("/usr/bin/ffmpeg"):
             return "/usr/bin/ffmpeg"
         raise FileNotFoundException("Could not find ffmpeg in usr/bin/ffmpeg or ./ffmpeg.exe")
