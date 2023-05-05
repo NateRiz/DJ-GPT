@@ -66,7 +66,7 @@ class MusicPlayer:
 
     def rewind(self, voice_client: discord.VoiceClient):
         voice_client.stop()
-        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
+        voice_client.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source=self.currently_playing_filename))
 
     def autoplay(self):
         self.is_autoplay = not self.is_autoplay
@@ -105,7 +105,7 @@ class MusicPlayer:
         :param song_prompt: The URL of the song to play
         :param channel_id: The ID of the channel where the song was requested
         """
-        voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=self.currently_playing_filename))
+        voice_client.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source=self.currently_playing_filename))
         await NotificationService.notify_new_song(self.client.get_channel(channel_id), song)
 
     async def _auto_download_and_play(self, voice_client: discord.VoiceClient, song_prompt: str,
@@ -132,3 +132,10 @@ class MusicPlayer:
             self.wait_for_audio_task = self.client.loop.create_task(self._wait_for_audio_finish())
         else:
             await self.song_queue.send_notification(requestor_channel)
+
+    def _get_ffmpeg_path():
+        if os.path.isfile("ffmpeg.exe"):
+            return "ffmpeg.exe"
+        if os.path.isfile("/usr/bin/ffmpeg")
+            return "/usr/bin/ffmpeg"
+        raise FileNotFoundException("Could not find ffmpeg in usr/bin/ffmpeg or ./ffmpeg.exe")
